@@ -141,8 +141,9 @@ export default {
   "data-lsp": props => {
     const id = createUniqueId();
     createEffect(() => {
-      tippy(`[data-template=${id}]`, {
+      tippy(`[data-template="${id}"]`, {
         content() {
+          console.log(id);
           const template = document.getElementById(id);
           return template.innerHTML;
         },
