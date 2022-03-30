@@ -42,9 +42,6 @@ function NavMenu() {
           <Route path="/learn/**/*" component={LearnNav} />
         </Routes>
       </nav>
-      {/* <div class="sticky bottom-0 hidden lg:block">
-        IsThisPageHelpful()}
-      </div> */}
     </aside>
   );
 }
@@ -68,6 +65,11 @@ const SECTIONS = {
     header: "Server Functions",
     link: "/api/server",
     inSubsections: p => p.startsWith("/api/server")
+  },
+  Router: {
+    header: "Router",
+    link: "/api/router",
+    inSubsections: p => p.startsWith("/api/router")
   }
 };
 
@@ -80,7 +82,7 @@ function ApiNav() {
 
   return (
     <Accordion as="ul" toggleable defaultValue={section ? SECTIONS[section].header : undefined}>
-      <NavSection href="/api/router/index" header="Routing">
+      <NavSection href="/api/router" header="Router">
         <NavItem href="/api/router/use-params" title="useParams()">
           useParams()
         </NavItem>
