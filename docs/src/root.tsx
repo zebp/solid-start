@@ -18,17 +18,16 @@ export const [store, setStore] = createStore({
 
 export default function Root() {
   createEffect(() => {
-    setTimeout(() => {
-      tippy("[data-template]", {
-        content(reference) {
-          console.log(reference);
-          const id = reference.getAttribute("data-template");
-          const template = document.getElementById(id);
-          return template.innerHTML;
-        },
-        allowHTML: true
-      });
-    }, 50);
+    // setTimeout(() => {
+    //   tippy("[data-template]", {
+    //     content(reference) {
+    //       const id = reference.getAttribute("data-template");
+    //       const template = document.getElementById(id);
+    //       return template.innerHTML;
+    //     },
+    //     allowHTML: true
+    //   });
+    // }, 50);
 
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       document.documentElement.classList.add("dark");

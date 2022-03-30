@@ -1,5 +1,6 @@
 import { Link } from "solid-app-router";
-import { createMemo } from "solid-js";
+import { createEffect, createMemo, createUniqueId } from "solid-js";
+import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
 import Terminal from "./components/Terminal";
@@ -138,11 +139,20 @@ export default {
     </pre>
   ),
   "data-lsp": props => {
-    const lspHash = createMemo(() => hashCode(props.lsp).toString());
+    const id = createUniqueId();
+    createEffect(() => {
+      tippy(`[data-template=${id}]`, {
+        content() {
+          const template = document.getElementById(id);
+          return template.innerHTML;
+        },
+        allowHTML: true
+      });
+    });
     return (
-      <span class="data-lsp" data-template={lspHash()}>
+      <span class={`data-lsp`} data-template={id}>
         {props.children}
-        <div id={lspHash()} style="display: none;">
+        <div id={id} style="display: none;">
           <pre class="text-white bg-transparent text-xs p-0 m-0 border-0">{props.lsp}</pre>
         </div>
       </span>
