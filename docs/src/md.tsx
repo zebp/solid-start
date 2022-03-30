@@ -85,7 +85,7 @@ export default {
     </h4>
   ),
   h5: props => (
-    <h5 {...props} class="text-2xl font-400">
+    <h5 {...props} class="text-xl leading-9 my-4 font-medium">
       {props.children}
     </h5>
   ),
@@ -172,6 +172,9 @@ export default {
     return <span>{props.children}</span>;
   },
   void: props => {
+    return <span>{props.children}</span>;
+  },
+  unknown: props => {
     return <span>{props.children}</span>;
   },
   terminal: Terminal,

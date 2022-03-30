@@ -81,11 +81,14 @@ function ApiNav() {
   return (
     <Accordion as="ul" toggleable defaultValue={section ? SECTIONS[section].header : undefined}>
       <NavSection href="/api/router/index" header="Routing">
-        <NavItem
-          href="/api/session/createCookieSessionStorage"
-          title="createCookieSessionStorage()"
-        >
-          createCookieSessionStorage()
+        <NavItem href="/api/router/use-params" title="useParams()">
+          useParams()
+        </NavItem>
+        <NavItem href="/api/router/use-location" title="useLocation()">
+          useLocation()
+        </NavItem>
+        <NavItem href="/api/router/use-navigate" title="useNavigate()">
+          useNavigate()
         </NavItem>
       </NavSection>
       <NavSection

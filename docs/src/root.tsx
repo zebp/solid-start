@@ -49,3 +49,28 @@ export default function Root() {
     </>
   );
 }
+
+import { useParams, Router, Route } from "solid-app-router";
+import { createResource, JSX } from "solid-js";
+
+function App() {
+  return (
+    <Router>
+      <Route path="/user/:id" component={User} />
+    </Router>
+  );
+}
+
+function fetchUser(id: string) {
+  return { name: "John" };
+}
+
+// ---cut---
+function User() {
+  const params = useParams();
+
+  // fetch user based on the id that we get as a path parameter
+  const [user] = createResource(() => params.slug, fetchUser);
+
+  return <h1>{user().name}</h1>;
+}
