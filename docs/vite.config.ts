@@ -160,9 +160,7 @@ export default defineConfig({
     }),
 
     solid({
-      ssr: false,
-      extensions: [".mdx", ".md"],
-      adapter: solidStartClientAdpater()
+      extensions: [".mdx", ".md"]
     })
   ],
   optimizeDeps: {
