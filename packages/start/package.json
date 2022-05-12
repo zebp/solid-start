@@ -27,12 +27,14 @@
     "root",
     "runtime",
     "error-boundary",
-    "api"
+    "api",
+    "dev"
   ],
   "dependencies": {
     "@babel/core": "^7.16.7",
     "@babel/plugin-syntax-jsx": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
+    "babel-plugin-jsx-source-loc": "^1.0.2",
     "chokidar": "^3.5.3",
     "compression": "^1.7.4",
     "connect": "^3.7.0",

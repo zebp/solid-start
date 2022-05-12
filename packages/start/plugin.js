@@ -46,7 +46,6 @@ function touch(path) {
     fs.closeSync(fs.openSync(path, "w"));
   }
 }
-let i = 0;
 function toArray(arr) {
   if (!arr) return [];
   if (Array.isArray(arr)) return arr;
@@ -62,8 +61,6 @@ function solidStartFileSystemRouter(options) {
 
   const { delay = 500, glob: enableGlob = true } = options;
   let root = process.cwd();
-  let reloadGlobs = [];
-  let restartGlobs = [];
   let configFile = "vite.config.js";
   let timerState = "reload";
   let timer;
@@ -125,8 +122,7 @@ function solidStartFileSystemRouter(options) {
       // with all slashes normalized to forward slashes `/`. this is compatible
       // with path.posix.join, so we can use it to make an absolute path glob
       root = config.root;
-      restartGlobs = toArray(options.restart).map(i => path.posix.join(root, i));
-      reloadGlobs = toArray(options.reload).map(i => path.posix.join(root, i));
+      // reloadGlobs = toArray(options.reload).map(i => path.posix.join(root, i));
     },
     configureServer(vite) {
       server = vite;
@@ -178,28 +174,31 @@ function solidStartFileSystemRouter(options) {
       let ssr = process.env.TEST_ENV === "client" ? false : isSsr;
 
       if (/.test.(tsx)/.test(id) && config.solidOptions.ssr) {
-        return babelSolidCompiler(code, id, (source, id) => ({
+        return babelSolidCompiler(code, id, () => ({
           plugins: [
+            process.env.NODE_ENV === "development" && ["babel-plugin-jsx-source-loc"],
             options.ssr && [
               babelServerModule,
               { ssr, root: process.cwd(), minify: process.env.NODE_ENV === "production" }
             ]
-          ]
+          ].filter(Boolean)
         }));
       }
 
       if (/.data.(ts|js)/.test(id) && config.solidOptions.ssr) {
-        return babelSolidCompiler(code, id.replace(/.data.ts/, ".tsx"), (source, id) => ({
+        return babelSolidCompiler(code, id.replace(/.data.ts/, ".tsx"), () => ({
           plugins: [
+            process.env.NODE_ENV === "development" && ["babel-plugin-jsx-source-loc"],
             options.ssr && [
               babelServerModule,
               { ssr, root: process.cwd(), minify: process.env.NODE_ENV === "production" }
             ]
-          ]
+          ].filter(Boolean)
         }));
       } else if (/\?data/.test(id)) {
-        return babelSolidCompiler(code, id.replace("?data", ""), (source, id) => ({
+        return babelSolidCompiler(code, id.replace("?data", ""), () => ({
           plugins: [
+            process.env.NODE_ENV === "development" && ["babel-plugin-jsx-source-loc"],
             options.ssr && [
               babelServerModule,
               { ssr, root: process.cwd(), minify: process.env.NODE_ENV === "production" }
@@ -212,8 +211,9 @@ function solidStartFileSystemRouter(options) {
           ].filter(Boolean)
         }));
       } else if (id.includes("routes")) {
-        return babelSolidCompiler(code, id.replace("?data", ""), (source, id) => ({
+        return babelSolidCompiler(code, id.replace("?data", ""), () => ({
           plugins: [
+            process.env.NODE_ENV === "development" && ["babel-plugin-jsx-source-loc"],
             options.ssr && [
               babelServerModule,
               { ssr, root: process.cwd(), minify: process.env.NODE_ENV === "production" }
@@ -308,7 +308,39 @@ function solidStartSSR(options) {
       return async () => {
         const { createDevHandler } = await import("./runtime/devServer.js");
         remove_html_middlewares(vite.middlewares);
+        vite.middlewares.use("/__src", async (req, res) => {
+          const pathname = req.url.split("__src")[0];
+          let result = fs.readFileSync(pathname.replace("/__src", ""), "utf8");
+          if (result) {
+            res.end(result);
+            return;
+          }
+          // }
+          // res.write(JSON.stringify({ error: "Module Not Found", path: req.url }));
+          // res.end();
+        });
         vite.middlewares.use(createDevHandler(vite));
+      };
+    }
+  };
+}
+
+/**
+ * @returns {import('vite').Plugin}
+ */
+function solidStartDevtools(options) {
+  return {
+    name: "solid-start-devtools",
+    configureServer(vite) {
+      return async () => {
+        vite.middlewares.use("/__src", async (req, res) => {
+          const pathname = req.url.split("__src")[0];
+          let result = fs.readFileSync(pathname.replace("/__src", ""), "utf8");
+          if (result) {
+            res.end(result);
+            return;
+          }
+        });
       };
     }
   };
@@ -385,28 +417,32 @@ export default function solidStart(options) {
     options ?? {}
   );
 
+  let babelMerge = (...args) => {};
+
   // @ts-ignore
   return [
     // restart({
     //   restart: ["src/routes/**/*"]
     // }),
     solidStartConfig(options),
-    solidStartFileSystemRouter(options),
     options.inspect ? inspect() : undefined,
     options.ssr && solidStartInlineServerModules(options),
+    solidStartFileSystemRouter(options),
     solid({
       ...(options ?? {}),
       babel: (source, id, ssr) => ({
         plugins: options.ssr
           ? [
+              process.env.NODE_ENV === "development" && ["babel-plugin-jsx-source-loc"],
               [
                 babelServerModule,
                 { ssr, root: process.cwd(), minify: process.env.NODE_ENV === "production" }
               ]
-            ]
+            ].filter(Boolean)
           : []
       })
     }),
+    solidStartDevtools(options),
     options.ssr && solidStartSSR(options),
     solidsStartRouteManifest(options)
   ].filter(Boolean);
