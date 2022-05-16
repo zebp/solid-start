@@ -406,6 +406,25 @@ export default function solidStart(options) {
     // restart({
     //   restart: ["src/routes/**/*"]
     // }),
+    {
+      resolveId: a => {
+        if (a.endsWith("entry-server")) {
+          return "@virtual:solid-start/entry-server.tsx";
+        } else if (a.endsWith("entry-client")) {
+          return "@virtual:solid-start/entry-client.tsx";
+        }
+        return a;
+      },
+      load: a => {
+        if (a === "@virtual:solid-start/entry-server.tsx") {
+          return `
+          import { StartServer, createHandler, renderAsync } from "solid-start/entry-server";
+
+          export default createHandler(renderAsync(context => <StartServer context={context} />));          
+          `;
+        }
+      }
+    },
     solidStartConfig(options),
     solidStartFileSystemRouter(options),
     options.inspect ? inspect() : undefined,
