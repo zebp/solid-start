@@ -9,10 +9,12 @@ import { rollup } from "rollup";
 import { fileURLToPath } from "url";
 import vite from "vite";
 
-export default function ({ edge } = {}) {
+export default function ({ edge = true } = {}) {
   return {
-    start() {
-      const proc = spawn("netlify", ["dev"]);
+    start(config) {
+      const proc = spawn(join(config.root, "node_modules", ".bin", "netlify"), ["dev"], {
+        shell: true
+      });
       proc.stdout.pipe(process.stdout);
       proc.stderr.pipe(process.stderr);
     },

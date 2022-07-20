@@ -8,6 +8,7 @@
   "type": "module",
   "devDependencies": {
     "@cloudflare/kv-asset-handler": "^0.1.1",
+    "netlify-cli": "^10.10.2",
     "solid-app-router": "^0.4.1",
     "solid-js": "^1.4.7",
     "solid-meta": "^0.27.3",

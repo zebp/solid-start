@@ -51,7 +51,9 @@ export async function createFixture(init: FixtureInit) {
   }
 
   let manifest = fse.readJSONSync(
-    path.resolve(projectDir, "dist", "public", "route-manifest.json")
+    process.env.ADAPTER === "solid-start-netlify"
+      ? path.resolve(projectDir, "netlify", "route-manifest.json")
+      : path.resolve(projectDir, "dist", "public", "route-manifest.json")
   );
 
   if (process.env.ADAPTER !== "solid-start-node") {
