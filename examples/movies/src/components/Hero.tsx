@@ -1,8 +1,9 @@
 import { Show } from "solid-js";
+import * as styles from "./Hero.module.scss";
+
 import { imageConfigDefault } from "../components/image/image-config";
 import { ImageConfigContext } from "../components/image/image-config-context";
 import { tmdbLoader, tmdbSizeMap } from "../services/tmdbAPI";
-import * as styles from "./Hero.module.scss";
 import Image from "./image/Image";
 
 export function Hero(props) {
@@ -13,7 +14,13 @@ export function Hero(props) {
       <div class={styles.hero}>
         <div class={styles.backdrop}>
           <div>
-            <button class={styles.play} type="button" aria-label="Play Trailer" onClick="openModal">
+            <button
+              v-if="trailer"
+              class={styles.play}
+              type="button"
+              aria-label="Play Trailer"
+              onClick="openModal"
+            >
               {/* <CirclePlayIcon /> */}
             </button>
             <ImageConfigContext.Provider

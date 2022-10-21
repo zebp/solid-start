@@ -8,7 +8,6 @@ import {
   useNavigate as useBaseNavigate
 } from "@solidjs/router";
 import { Accessor } from "solid-js";
-import { isServer } from "solid-js/web";
 import { island as unstable_island } from "./islands";
 import { useLocation as useIslandsLocation } from "./islands/router";
 import { Outlet as IslandsOutlet } from "./islands/server-router";
@@ -37,10 +36,12 @@ const Outlet = import.meta.env.START_ISLANDS_ROUTER
   : BaseOutlet;
 
 const useLocation =
-  import.meta.env.START_ISLANDS_ROUTER && !isServer ? useIslandsLocation : useBaseLocation;
+  import.meta.env.START_ISLANDS_ROUTER && !import.meta.env.SSR
+    ? useIslandsLocation
+    : useBaseLocation;
 
 const useNavigate =
-  import.meta.env.START_ISLANDS_ROUTER && !isServer
+  import.meta.env.START_ISLANDS_ROUTER && !import.meta.env.SSR
     ? function IslandsUseNavigate() {
         return ((to, props) => window.NAVIGATE(to, props)) as unknown as Navigator;
       }

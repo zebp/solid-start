@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
-import { createComponent, hydrate, render } from "solid-js/web";
+import { getOwner } from "solid-js";
+import { createComponent, getNextElement, hydrate, render } from "solid-js/web";
 
 import mountRouter from "../islands/router";
 
@@ -11,8 +12,6 @@ declare global {
 
 if (import.meta.env.DEV) {
   localStorage.setItem("debug", import.meta.env.DEBUG ?? "start*");
-  // const { default: createDebugger } = await import("debug");
-  // window.DEBUG = createDebugger("start:client");
   window.DEBUG = console.log as unknown as any;
 
   DEBUG(`import.meta.env.DEV = ${import.meta.env.DEV}`);
@@ -25,6 +24,11 @@ if (import.meta.env.DEV) {
   window.INSPECT = () => {
     window.open(window.location.href.replace(window.location.pathname, "/__inspect"));
   };
+}
+
+function lookupOwner(el: HTMLElement) {
+  const parent = el.closest("solid-children");
+  return parent && (parent as any).__$owner;
 }
 
 export default function mount(code?: () => JSX.Element, element?: Document) {
@@ -45,15 +49,7 @@ export default function mount(code?: () => JSX.Element, element?: Document) {
       }
 
       let Component = window._$HY.islandMap[el.dataset.island];
-
-      if (!Component) {
-        await import(/* @vite-ignore */ el.dataset.component);
-        Component = window._$HY.islandMap[el.dataset.island];
-      }
-
-      if (!el.dataset.hk) {
-        return;
-      }
+      if (!Component || !el.dataset.hk) return;
 
       DEBUG(
         "hydrating island",
@@ -65,26 +61,50 @@ export default function mount(code?: () => JSX.Element, element?: Document) {
       hydrate(
         () =>
           createComponent(Component, {
-            ...JSON.parse(el.dataset.props)
+            ...JSON.parse(el.dataset.props),
+            get children() {
+              const el = getNextElement();
+              (el as any).__$owner = getOwner();
+              return;
+            }
           }),
         el,
         {
-          renderId: el.dataset.hk.slice(0, el.dataset.hk.length - 1) + `1-`
+          renderId: el.dataset.hk.slice(0, el.dataset.hk.length - 1) + `1-`,
+          owner: lookupOwner(el)
         }
       );
 
       delete el.dataset.hk;
     }
 
+    let queue = [];
+    let queued = false;
+    function runTaskQueue(info) {
+      while (info.timeRemaining() > 0 && queue.length) {
+        mountIsland(queue.shift());
+      }
+      if (queue.length) {
+        requestIdleCallback(runTaskQueue);
+      } else queued = false;
+    }
     window._$HY.hydrateIslands = () => {
-      document.querySelectorAll("solid-island[data-hk]").forEach((el: HTMLElement) => {
-        if (el.dataset.when === "idle" && "requestIdleCallback" in window) {
-          requestIdleCallback(() => mountIsland(el));
-        } else {
-          mountIsland(el as HTMLElement);
-        }
+      const islands = document.querySelectorAll("solid-island[data-hk]");
+      const assets = new Set<string>();
+      islands.forEach((el: HTMLElement) => assets.add(el.dataset.component));
+      Promise.all([...assets].map(asset => import(/* @vite-ignore */ asset))).then(() => {
+        islands.forEach((el: HTMLElement) => {
+          if (el.dataset.when === "idle" && "requestIdleCallback" in window) {
+            if (!queued) {
+              queued = true;
+              requestIdleCallback(runTaskQueue);
+            }
+            queue.push(el);
+          } else mountIsland(el as HTMLElement);
+        });
       });
     };
+    window._$HY.fe = window._$HY.hydrateIslands;
 
     window._$HY.hydrateIslands();
 

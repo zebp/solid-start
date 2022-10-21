@@ -8,23 +8,23 @@ export function Card(props) {
   const media = () =>
     props.item.media_type ? props.item.media_type : props.item.name ? "tv" : "movie";
   return (
-    <ImageConfigContext.Provider
-      value={{
-        ...imageConfigDefault,
-        imageSizes: tmdbSizeMap.poster,
-        deviceSizes: tmdbSizeMap.poster,
-        loader: "custom",
-        imageLoader: tmdbLoader
-      }}
-    >
-      <div class="card">
-        <A class="card__link" href={`/${media()}/${props.item.id}`}>
-          <div class="card__img">
+    <div class="card">
+      <A class="card__link" href={`/${media()}/${props.item.id}`}>
+        <div class="card__img">
+          <ImageConfigContext.Provider
+            value={{
+              ...imageConfigDefault,
+              imageSizes: tmdbSizeMap.poster,
+              deviceSizes: tmdbSizeMap.poster,
+              loader: "custom",
+              imageLoader: tmdbLoader
+            }}
+          >
             <Image width={342} height={192} src={props.item.poster_path} alt={props.item.name} />
-          </div>
-          <h2>{props.item.title}</h2>
-        </A>
-      </div>
-    </ImageConfigContext.Provider>
+          </ImageConfigContext.Provider>
+        </div>
+        <h2>{props.item.title}</h2>
+      </A>
+    </div>
   );
 }
