@@ -1,3 +1,4 @@
+import netlify from "solid-start-netlify";
 import solid from "solid-start/vite";
 import icons from "unplugin-icons/vite";
 import { defineConfig } from "vite";
@@ -9,7 +10,8 @@ export default defineConfig({
     }),
     solid({
       islands: true,
-      islandsRouter: true
+      islandsRouter: true,
+      adapter: netlify({ edge: true })
     })
   ]
 });
