@@ -1,5 +1,7 @@
 import { createContext, JSX, useContext } from "solid-js";
 import { ssr } from "solid-js/web";
+import { getAssetsFromManifest } from "../root/assets";
+import { useServerContext } from "../server/ServerContext";
 export interface RouteDefinition {
   path: string;
   component?: () => JSX.Element;
@@ -60,7 +62,8 @@ export function matchPath(path: string, location: string, partial?: boolean): Pa
   const [pattern, splat] = path.split("/*", 2);
   const segments = pattern.split("/").filter(Boolean);
   const len = segments.length;
-  const locSegments = location.split("/").filter(Boolean);
+  const { pathname } = new URL(location, "http://localhost");
+  const locSegments = pathname.split("/").filter(Boolean);
   const lenDiff = locSegments.length - len;
   if (lenDiff < 0 || (lenDiff > 0 && splat === undefined && !partial)) {
     return null;
@@ -201,17 +204,57 @@ export interface RouterProps {
 }
 
 export function Router(props: RouterProps) {
+  const context = useServerContext();
   const next = getMatchedBranch(props.routes, props.location);
   if (!next || !next.routes.length) {
     return [];
   }
 
   const nextRoutes = next.routes;
+  console.log(nextRoutes);
 
   const prev = props.prevLocation ? getMatchedBranch(props.routes, props.prevLocation) : null;
-  console.log(prev, nextRoutes);
   if (prev) {
     const prevRoutes = prev.routes;
+
+    if (import.meta.env.PROD) {
+      let nextAssets = getAssetsFromManifest(context.env.manifest, [
+        nextRoutes.map(r => ({
+          ...r,
+          ...r.match
+        }))
+      ]);
+
+      let prevAssets = getAssetsFromManifest(context.env.manifest, [
+        prevRoutes.map(r => ({
+          ...r,
+          ...r.match
+        }))
+      ]);
+
+      const set = new Set();
+      prevAssets.forEach(a => {
+        set.add(a.href);
+      });
+
+      let assets = [[], []];
+
+      let m = {};
+      nextAssets.forEach(a => {
+        if (!set.has(a.href) && (a.type === "script" || a.type === "style")) {
+          m[a.href] = [a.type, a.href];
+        } else {
+          set.delete(a.href);
+        }
+      });
+
+      [...set.entries()].forEach(a => {
+        let prev = prevAssets.find(p => p.href === a[1]);
+        assets[1].push([prev.type, prev.href]);
+      });
+
+      props.out.assets = [Object.values(m), assets[1]];
+    }
 
     for (let i = 0, len = nextRoutes.length; i < len; i++) {
       const nextRoute = nextRoutes[i];
