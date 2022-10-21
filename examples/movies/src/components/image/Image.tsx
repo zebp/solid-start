@@ -20,36 +20,48 @@ const allImgs = new Map<string, { src: string; priority: boolean; placeholder: s
 let perfObserver: PerformanceObserver | undefined;
 
 const Image: Component<ImageProps> = inProps => {
-  const [props, rest]: Partial<ImageProps>[] = splitProps(inProps, [
-    "src",
-    "sizes",
-    "unoptimized",
-    "priority",
-    "loading",
-    "class",
-    "quality",
-    "width",
-    "height",
-    "fill",
-    "style",
-    "onLoadingComplete",
-    "placeholder",
-    "blurDataURL"
-  ]);
+  const [props, sizes, rest]: Partial<ImageProps>[] = splitProps(
+    inProps,
+    [
+      "src",
+      "sizes",
+      "unoptimized",
+      "priority",
+      "loading",
+      "class",
+      "quality",
+      "width",
+      "height",
+      "fill",
+      "style",
+      "onLoadingComplete",
+      "placeholder",
+      "blurDataURL"
+    ],
+    ["deviceSizes", "imageSizes"]
+  );
   const configContext = useContext(ImageConfigContext);
   // Is this memo really needed? Seems a bit unnecessary for an image component.
   const config = createMemo<ImageConfig>(
     on(
-      () => configContext,
+      () => [configContext, sizes],
       () => {
         const c = configContext || imageConfigDefault;
-        const allSizes = [...c.deviceSizes, ...c.imageSizes].sort((a, b) => a - b);
-        const deviceSizes = c.deviceSizes.sort((a, b) => a - b);
+
+        // Let the user override sizes at the component level
+        let deviceSizes = sizes.deviceSizes || c.deviceSizes;
+        const imageSizes = sizes.imageSizes || c.imageSizes;
+
+        const allSizes = [...deviceSizes, ...imageSizes].sort((a, b) => a - b);
+        deviceSizes = deviceSizes.sort((a, b) => a - b);
         return { ...c, allSizes, deviceSizes };
       }
     )
   );
+
+  // Use a loader supplied to the context with a fallback to the defaultLoader
   let loader: ImageLoaderWithConfig = defaultLoader;
+
   if ("loader" in rest) {
     if (rest.loader) {
       const customImageLoader = rest.loader;
@@ -62,7 +74,15 @@ const Image: Component<ImageProps> = inProps => {
     }
     // Remove property so it's not spread on <img>
     delete rest.loader;
+  } else if (config().imageLoader && config().loader === "custom") {
+    loader = obj => {
+      const { config: _, ...opts } = obj;
+      // The config object is internal only so we must
+      // not pass it to the user-defined loader()
+      return config().imageLoader(opts);
+    };
   }
+
   let staticSrc = "";
   let widthInt = getInt(props.width);
   let heightInt = getInt(props.height);
