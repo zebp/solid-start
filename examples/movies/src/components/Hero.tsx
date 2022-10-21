@@ -1,5 +1,9 @@
 import { Show } from "solid-js";
+import { imageConfigDefault } from "../components/image/image-config";
+import { ImageConfigContext } from "../components/image/image-config-context";
+import { tmdbLoader, tmdbSizeMap } from "../services/tmdbAPI";
 import * as styles from "./Hero.module.scss";
+import Image from "./image/Image";
 
 export function Hero(props) {
   const stars = () => (props.item.vote_average ? props.item.vote_average * 10 : 0);
@@ -9,23 +13,29 @@ export function Hero(props) {
       <div class={styles.hero}>
         <div class={styles.backdrop}>
           <div>
-            <button
-              v-if="trailer"
-              class={styles.play}
-              type="button"
-              aria-label="Play Trailer"
-              onClick="openModal"
-            >
+            <button class={styles.play} type="button" aria-label="Play Trailer" onClick="openModal">
               {/* <CirclePlayIcon /> */}
             </button>
-            <img
-              src={"https://image.tmdb.org/t/p/original" + props.item.backdrop_path}
-              alt=""
-              class={styles.image}
-              style={{
-                height: "100%"
+            <ImageConfigContext.Provider
+              value={{
+                ...imageConfigDefault,
+                imageSizes: tmdbSizeMap.backdrop,
+                deviceSizes: tmdbSizeMap.backdrop,
+                loader: "custom"
               }}
-            />
+            >
+              <Image
+                src={props.item.backdrop_path}
+                alt=""
+                width={1280}
+                height={720}
+                class={styles.image}
+                style={{
+                  height: "100%"
+                }}
+                loader={tmdbLoader}
+              />
+            </ImageConfigContext.Provider>
             {/* <nuxt-picture
         class="$style.image"
         sizes="xsmall:100vw medium:71.1vw"

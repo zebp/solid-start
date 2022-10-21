@@ -16,6 +16,11 @@ import { defaultLoader, handleLoading } from "./loaders";
 import { ImageConfig, ImageLoaderWithConfig, ImageProps, ImgElementWithDataProp } from "./types";
 import { checkImage, generateImgAttrs, getInt, isStaticImport, isStaticRequire } from "./utils";
 
+/**
+ * Migrated from next/future/image. Credit and copywrite for the original source
+ * should be attributed to Next.js and Vercel.
+ */
+
 const allImgs = new Map<string, { src: string; priority: boolean; placeholder: string }>();
 let perfObserver: PerformanceObserver | undefined;
 
