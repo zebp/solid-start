@@ -38,16 +38,11 @@ export function Hero(props) {
                 height={720}
                 class={styles.image}
                 style={{
-                  height: "100%"
+                  width: "100%"
                 }}
                 loader={tmdbLoader}
               />
             </ImageConfigContext.Provider>
-            {/* <nuxt-picture
-        class="$style.image"
-        sizes="xsmall:100vw medium:71.1vw"
-        :alt="name"
-        :src="backdrop" /> */}
           </div>
         </div>
 
