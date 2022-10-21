@@ -1,6 +1,6 @@
+import { JSX } from "solid-js";
 import { ImageConfigComplete } from "./image-config";
 import { VALID_LOADING_VALUES } from "./utils";
-import { JSX } from "solid-js";
 
 export type ImageConfig = ImageConfigComplete & { allSizes: number[] };
 export type ImgElementWithDataProp = HTMLImageElement & {
@@ -41,6 +41,12 @@ export type ImageProps = Omit<
   JSX.IntrinsicElements["img"],
   "src" | "srcSet" | "ref" | "alt" | "width" | "height" | "loading"
 > & {
+  /** @see [Device sizes documentation](https://nextjs.org/docs/api-reference/next/image#device-sizes) */
+  deviceSizes?: number[];
+
+  /** @see [Image sizing documentation](https://nextjs.org/docs/basic-features/image-optimization#image-sizing) */
+  imageSizes?: number[];
+
   src: string | StaticImport;
   alt: string;
   width?: number | string;
