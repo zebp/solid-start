@@ -1,8 +1,6 @@
 import { Show } from "solid-js";
 import * as styles from "./Hero.module.scss";
 
-import { imageConfigDefault } from "../components/image/image-config";
-import { ImageConfigContext } from "../components/image/image-config-context";
 import { tmdbLoader, tmdbSizeMap } from "../services/tmdbAPI";
 import Image from "./image/Image";
 
@@ -23,26 +21,19 @@ export function Hero(props) {
             >
               {/* <CirclePlayIcon /> */}
             </button>
-            <ImageConfigContext.Provider
-              value={{
-                ...imageConfigDefault,
-                imageSizes: tmdbSizeMap.backdrop,
-                deviceSizes: tmdbSizeMap.backdrop,
-                loader: "custom"
+            <Image
+              src={props.item.backdrop_path}
+              alt=""
+              width={1280}
+              height={720}
+              class={styles.image}
+              style={{
+                width: "100%"
               }}
-            >
-              <Image
-                src={props.item.backdrop_path}
-                alt=""
-                width={1280}
-                height={720}
-                class={styles.image}
-                style={{
-                  width: "100%"
-                }}
-                loader={tmdbLoader}
-              />
-            </ImageConfigContext.Provider>
+              imageSizes={tmdbSizeMap.backdrop}
+              deviceSizes={tmdbSizeMap.backdrop}
+              loader={tmdbLoader}
+            />
           </div>
         </div>
 

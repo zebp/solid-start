@@ -1,6 +1,6 @@
 import Nprogress from "nprogress";
-
 import { mount, StartClient } from "solid-start/entry-client";
+
 mount(() => <StartClient />, document);
 
 window.ROUTER.addEventListener("navigation-start", e => {
