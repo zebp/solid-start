@@ -32,7 +32,7 @@ export function Card(props) {
           <Show fallback={<EmptyPoster />} when={image() !== null}>
             <Image
               width={342}
-              height={192}
+              height={556}
               imageSizes={tmdbSizeMap.poster}
               deviceSizes={tmdbSizeMap.poster}
               src={props.item.poster_path}
@@ -40,7 +40,7 @@ export function Card(props) {
               loader={tmdbLoader}
             />
           </Show>
-        </div>
+          </div>
         <h2>{props.item.title}</h2>
       </A>
     </div>

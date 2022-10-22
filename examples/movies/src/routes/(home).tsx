@@ -3,7 +3,6 @@ import { createRouteData, useRouteData } from "solid-start";
 import Hero from "~/components/Hero";
 import { ListingCarousel } from "~/components/ListingCarousel";
 import { getListItem, getMovie, getTrending, getTvShow } from "~/services/tmdbAPI";
-// import { Hero } from "../../components/Hero";
 
 export function routeData() {
   return createRouteData(async () => {
@@ -46,7 +45,7 @@ export default function Page() {
           title={getListItem("movie", "trending").TITLE}
         />
         <ListingCarousel
-          items={data()?.trendingMovies.results}
+          items={data()?.trendingTv.results}
           viewAllHref={`/tv/categories/trending`}
           title={getListItem("tv", "trending").TITLE}
         />
