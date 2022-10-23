@@ -1,5 +1,7 @@
-import { JSX } from "solid-js";
+import { Accessor, JSX } from "solid-js";
 import { VALID_LOADING_VALUES } from "./utils";
+
+type SafeNumber = number | `${number}`
 
 export type ImgElementWithDataProp = HTMLImageElement & {
   "data-loaded-src": string | undefined;
@@ -84,6 +86,7 @@ export type ImageConfigComplete = {
 export type ImageConfig = Partial<ImageConfigComplete & { allSizes: number[] }>;
 export type LoadingValue = typeof VALID_LOADING_VALUES[number];
 export type PlaceholderValue = "blur" | "empty";
+export type OnLoad = (img: Event & { nativeEvent: Event }) => void;
 export type OnLoadingComplete = (img: HTMLImageElement) => void;
 export type ImgElementStyle = NonNullable<JSX.IntrinsicElements["img"]["style"]>;
 export type GenImgAttrsData = {
@@ -121,12 +124,12 @@ export type ImageProps = Omit<
 
   /** @see [Image sizing documentation](https://nextjs.org/docs/basic-features/image-optimization#image-sizing) */
   imageSizes?: number[];
-  src: string | StaticImport;
+  src: string | StaticImport | Accessor<string | StaticImport>;
   alt: string;
-  width?: number | string;
-  height?: number | string;
+  width?: SafeNumber;
+  height?: SafeNumber;
   fill?: boolean;
-  quality?: number | string;
+  quality?: SafeNumber;
   priority?: boolean;
   loading?: LoadingValue;
   placeholder?: PlaceholderValue;

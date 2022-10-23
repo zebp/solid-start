@@ -235,7 +235,7 @@ const Image: Component<ImageProps> = inProps => {
         width={widthInt}
         height={heightInt}
         decoding="async"
-        data-nimg={`future${props.fill ? "-fill" : ""}`}
+        data-simg={`${props.fill ? "-fill" : ""}`}
         class={props.class}
         loading={isLazy ? "lazy" : props.loading}
         style={{

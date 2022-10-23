@@ -2,7 +2,7 @@ import { makeRe } from 'micromatch';
 import { createContext } from "solid-js";
 import { isServer } from "solid-js/web";
 import type {
-  GenImgAttrsData, GenImgAttrsResult, ImageConfig, ImageConfigComplete, ImgElementWithDataProp, OnLoadingComplete, PlaceholderValue, RemotePattern, StaticImageData, StaticImport,
+  GenImgAttrsData, GenImgAttrsResult, ImageConfig, ImageConfigComplete, ImgElementWithDataProp, OnLoad, OnLoadingComplete, PlaceholderValue, RemotePattern, StaticImageData, StaticImport,
   StaticRequire
 } from './types';
 
@@ -75,6 +75,7 @@ export function getWidths(
   ];
   return { widths, kind: "x" };
 }
+
 export function generateImgAttrs({
   config,
   src,
@@ -108,6 +109,7 @@ export function generateImgAttrs({
     src: loader({ config, src, quality, width: widths[last] }),
   };
 }
+
 export function getInt(x: unknown): number | undefined {
   if (typeof x === "number" || typeof x === "undefined") {
     return x;
@@ -117,6 +119,7 @@ export function getInt(x: unknown): number | undefined {
   }
   return NaN;
 }
+
 export const checkImage = ({ src, unoptimized, props, widthInt, heightInt, rest, loader, blurDataURL, perfObserver, defaultLoader, config, qualityInt, allImgs }) => {
   if (!src) {
     // React doesn't show the stack trace and there's
@@ -265,18 +268,19 @@ export const checkImage = ({ src, unoptimized, props, widthInt, heightInt, rest,
 
 // See https://stackoverflow.com/q/39777833/266535 for why we use this ref
 // handler instead of the img's onLoad attribute.
-export function handleLoading(
+function handleLoading(
   img: ImgElementWithDataProp,
   src: string,
   placeholder: PlaceholderValue,
-  onLoadingComplete: OnLoadingComplete | undefined,
+  onLoad: OnLoad | undefined,
+  onLoadingCompleteRef: OnLoadingComplete | undefined,
   setBlurComplete: (b: boolean) => void
 ) {
-  if (!img || img["data-loaded-src"] === src) {
-    return;
+  if (!img || img['data-loaded-src'] === src) {
+    return
   }
-  img["data-loaded-src"] = src;
-  const p = "decode" in img ? img.decode() : Promise.resolve();
+  img['data-loaded-src'] = src
+  const p = 'decode' in img ? img.decode() : Promise.resolve()
   p.catch(() => {}).then(() => {
     if (!img.parentNode) {
       // Exit early in case of race condition:
@@ -284,55 +288,78 @@ export function handleLoading(
       // - decode() is called but incomplete
       // - unmount is called
       // - decode() completes
-      return;
+      return
     }
-    if (placeholder === "blur") {
-      setBlurComplete(true);
+    if (placeholder === 'blur') {
+      setBlurComplete(true)
     }
-    if (onLoadingComplete) onLoadingComplete(img);
-    if (import.meta.env.MODE !== "production") {
-      if (img.getAttribute("data-nimg") === "future-fill") {
+    if (onLoad) {
+      const event = new Event('load')
+      Object.defineProperty(event, 'target', { writable: false, value: img })
+      let prevented = false
+      let stopped = false
+      onLoad({
+        ...event,
+        nativeEvent: event,
+        currentTarget: img,
+        target: img,
+        preventDefault: () => {
+          prevented = true
+          event.preventDefault()
+        },
+        stopPropagation: () => {
+          stopped = true
+          event.stopPropagation()
+        },
+      })
+    }
+    if (onLoadingCompleteRef) {
+      onLoadingCompleteRef(img)
+    }
+    if (!import.meta.env.PROD) {
+      if (img.getAttribute('data-simg') === 'fill') {
         if (
-          !img.getAttribute("sizes") ||
-          img.getAttribute("sizes") === "100vw"
+          !img.getAttribute('sizes') ||
+          img.getAttribute('sizes') === '100vw'
         ) {
           let widthViewportRatio =
-            img.getBoundingClientRect().width / window.innerWidth;
+            img.getBoundingClientRect().width / window.innerWidth
           if (widthViewportRatio < 0.6) {
             warnOnce(
-              `Image with src "${src}" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/future/image#sizes`
-            );
+              `Image with src "${src}" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes`
+            )
           }
         }
         if (img.parentElement) {
-          const { position } = window.getComputedStyle(img.parentElement);
-          const valid = ["absolute", "fixed", "relative"];
+          const { position } = window.getComputedStyle(img.parentElement)
+          const valid = ['absolute', 'fixed', 'relative']
           if (!valid.includes(position)) {
             warnOnce(
               `Image with src "${src}" has "fill" and parent element with invalid "position". Provided "${position}" should be one of ${valid
                 .map(String)
-                .join(",")}.`
-            );
+                .join(',')}.`
+            )
           }
         }
         if (img.height === 0) {
           warnOnce(
             `Image with src "${src}" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.`
-          );
+          )
         }
       }
-      const heightModified = img.height.toString() !== img.getAttribute("height");
-      const widthModified = img.width.toString() !== img.getAttribute("width");
+      const heightModified =
+        img.height.toString() !== img.getAttribute('height')
+      const widthModified = img.width.toString() !== img.getAttribute('width')
       if (
         (heightModified && !widthModified) ||
         (!heightModified && widthModified)
       ) {
         warnOnce(
           `Image with src "${src}" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.`
-        );
+        )
       }
     }
-  });
+  })
 }
 
 export const imageConfigDefault: ImageConfigComplete = {

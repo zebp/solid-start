@@ -15,6 +15,7 @@
     "vite": "^3.1.0"
   },
   "dependencies": {
+    "@solid-primitives/scheduled": "1.1.0",
     "@solidjs/meta": "^0.28.0",
     "@solidjs/router": "^0.5.0",
     "micromatch": "^4.0.5",
@@ -23,7 +24,6 @@
     "solid-js": "^1.5.8",
     "solid-start": "^0.2.0",
     "solid-start-netlify": "workspace:^0.2.0",
-    "@solid-primitives/scheduled": "1.1.0",
     "undici": "^5.10.0"
   },
   "engines": {
