@@ -9,12 +9,19 @@ import {
   useContext
 } from "solid-js";
 import { Link } from "solid-start";
-import { getImageBlurSvg } from "./image-blur-svg";
-import { imageConfigDefault } from "./image-config";
-import { ImageConfigContext } from "./image-config-context";
-import { defaultLoader, handleLoading } from "./loaders";
+import { defaultLoader } from "./loaders";
 import { ImageConfig, ImageLoaderWithConfig, ImageProps, ImgElementWithDataProp } from "./types";
-import { checkImage, generateImgAttrs, getInt, isStaticImport, isStaticRequire } from "./utils";
+import {
+  checkImage,
+  generateImgAttrs,
+  getImageBlurSvg,
+  getInt,
+  handleLoading,
+  ImageConfigContext,
+  imageConfigDefault,
+  isStaticImport,
+  isStaticRequire
+} from "./utils";
 
 /**
  * Migrated from next/future/image. Credit and copywrite for the original source
@@ -94,6 +101,7 @@ const Image: Component<ImageProps> = inProps => {
   let blurWidth: number | undefined;
   let blurHeight: number | undefined;
   let blurDataURL = props.blurDataURL;
+
   if (isStaticImport(props.src)) {
     const staticImageData = isStaticRequire(props.src) ? props.src.default : props.src;
     if (!staticImageData.src) {
@@ -150,13 +158,13 @@ const Image: Component<ImageProps> = inProps => {
       widthInt,
       heightInt,
       rest,
-      loader,
       blurDataURL,
-      perfObserver,
-      defaultLoader,
-      config,
       qualityInt,
-      allImgs
+      allImgs,
+      perfObserver,
+      loader,
+      defaultLoader,
+      config
     });
   }
   const imgStyle = createMemo<JSX.CSSProperties>(() =>
@@ -179,10 +187,10 @@ const Image: Component<ImageProps> = inProps => {
   const blurStyle = createMemo(() =>
     props.placeholder === "blur" && blurDataURL && !blurComplete()
       ? {
-          backgroundSize: imgStyle()["object-fit"] || "cover",
-          backgroundPosition: imgStyle()["object-position"] || "50% 50%",
-          backgroundRepeat: "no-repeat",
-          backgroundImage: `url("data:image/svg+xml;charset=utf-8,${getImageBlurSvg({
+          "background-size": imgStyle()["object-fit"] || "cover",
+          "background-position": imgStyle()["object-position"] || "50% 50%",
+          "background-repeat": "no-repeat",
+          "background-image": `url("data:image/svg+xml;charset=utf-8,${getImageBlurSvg({
             widthInt,
             heightInt,
             blurWidth,
@@ -192,31 +200,25 @@ const Image: Component<ImageProps> = inProps => {
         }
       : {}
   );
-  if (import.meta.env.MODE === "development") {
-    if (blurStyle().backgroundImage && blurDataURL?.startsWith("/")) {
-      // During `next dev`, we don't want to generate blur placeholders with webpack
-      // because it can delay starting the dev server. Instead, `next-image-loader.js`
-      // will inline a special url to lazily generate the blur placeholder at request time.
-      blurStyle().backgroundImage = `url("${blurDataURL}")`;
-    }
-  }
-  const imgAttributes = generateImgAttrs({
-    config: config(),
-    src,
-    unoptimized,
-    width: widthInt,
-    quality: qualityInt,
-    sizes: props.sizes,
-    loader
-  });
+  const imgAttributes = createMemo(() =>
+    generateImgAttrs({
+      config: config(),
+      src,
+      unoptimized,
+      width: widthInt,
+      quality: qualityInt,
+      sizes: props.sizes,
+      loader
+    })
+  );
   let srcString: string = src;
   if (import.meta.env.MODE !== "production") {
     if (typeof window !== "undefined") {
       let fullUrl: URL;
       try {
-        fullUrl = new URL(imgAttributes.src);
+        fullUrl = new URL(imgAttributes().src);
       } catch (e) {
-        fullUrl = new URL(imgAttributes.src, window.location.href);
+        fullUrl = new URL(imgAttributes().src, window.location.href);
       }
       allImgs.set(fullUrl.href, {
         src,
@@ -229,7 +231,7 @@ const Image: Component<ImageProps> = inProps => {
     <>
       <img
         {...rest}
-        {...imgAttributes}
+        {...imgAttributes()}
         width={widthInt}
         height={heightInt}
         decoding="async"
@@ -314,10 +316,9 @@ const Image: Component<ImageProps> = inProps => {
         <Link
           rel="preload"
           as="image"
-          href={imgAttributes.srcSet ? undefined : imgAttributes.src}
-          // @ts-ignore
-          imagesizes={imgAttributes.sizes}
-          imagesrcset={imgAttributes.srcSet}
+          href={imgAttributes().srcSet ? "" : imgAttributes().src}
+          imagesizes={imgAttributes().sizes || ""}
+          imagesrcset={imgAttributes().srcSet || ""}
         />
       </Show>
     </>
