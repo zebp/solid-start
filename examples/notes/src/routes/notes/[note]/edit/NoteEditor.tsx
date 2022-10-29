@@ -18,7 +18,7 @@ export function NoteEditor(props: { noteId: string; initialTitle: string; initia
   const [isSaving, saveNote] = createServerAction$(async (form: FormData, { env }) => {
     console.log(form.get("title"));
     let { noteId, title, body } = Object.fromEntries(form.entries()) as any;
-    if (noteId !== null) {
+    if (noteId.length > 0) {
       await env.DO.get(env.DO.idFromName("notes")).fetch(
         `https://notes/update?id=${encodeURIComponent(noteId)}`,
         {
