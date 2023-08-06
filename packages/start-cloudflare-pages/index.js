@@ -139,8 +139,6 @@ export default function (miniflareOptions) {
         await builder.server(join(config.root, ".solid", "server"));
       }
 
-      writeFileSync(join(config.root, "dist", "public", "_headers"), getHeadersFile(), "utf8");
-
       copyFileSync(join(__dirname, "entry.js"), join(config.root, ".solid", "server", "server.js"));
       const bundle = await rollup({
         input: join(config.root, ".solid", "server", "server.js"),
@@ -178,6 +176,12 @@ export default function (miniflareOptions) {
         "utf8"
       );
 
+      writeFileSync(
+        join(config.root, "dist", "public", "_headers"),
+        getHeadersFile(staticRoutes),
+        "utf8"
+      );
+
       for (let route of staticRoutes) {
         const originalRoute = route;
         if (route.startsWith("/")) route = route.slice(1);
@@ -201,11 +205,17 @@ export default function (miniflareOptions) {
  * @see https://developers.cloudflare.com/pages/platform/headers/
  */
 // prettier-ignore
-const getHeadersFile = () =>
-`
-/assets/*
+const getHeadersFile = (staticRoutes) => {
+  let headers = `/assets/*
   Cache-Control: public, immutable, max-age=31536000
-`.trim();
+  `.trim();
+
+  for (const route of staticRoutes) {
+    headers += `\n${route}\n  Cache-Control: public, max-age=120`;
+  }
+
+  return headers
+}
 
 const exec = promisify(execFile);
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
