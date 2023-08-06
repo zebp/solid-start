@@ -179,11 +179,17 @@ export default function (miniflareOptions) {
       );
 
       for (let route of staticRoutes) {
+        const originalRoute = route;
         if (route.startsWith("/")) route = route.slice(1);
 
         await run({
           entry: join(config.root, "functions", "[[path]].js"),
-          output: join(config.root, "dist", "public", `${route}.html`),
+          output: join(
+            config.root,
+            "dist",
+            "public",
+            originalRoute.endsWith("/") ? `${originalRoute}index.html` : `${route}.html`
+          ),
           url: `http://localhost:8787/${route}`
         });
       }
