@@ -1,12 +1,13 @@
 import common from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
-import { spawn } from "child_process";
+import { execFile, spawn } from "child_process";
 import { copyFileSync, writeFileSync } from "fs";
 import { Miniflare } from "miniflare";
-import { dirname, join } from "path";
+import { dirname, join, resolve } from "path";
 import { rollup } from "rollup";
 import { fileURLToPath } from "url";
+import { promisify } from "util";
 import { createServer } from "./dev-server.js";
 
 export default function (miniflareOptions) {
@@ -162,6 +163,30 @@ export default function (miniflareOptions) {
 
       // closes the bundle
       await bundle.close();
+
+      await config.solidOptions.router.init();
+
+      const staticRoutes = config.solidOptions.prerenderRoutes || [];
+
+      writeFileSync(
+        join(config.root, "dist", "public", "_routes.json"),
+        JSON.stringify({
+          version: 1,
+          include: ["/*"],
+          exclude: staticRoutes
+        }),
+        "utf8"
+      );
+
+      for (let route of staticRoutes) {
+        if (route.startsWith("/")) route = route.slice(1);
+
+        await run({
+          entry: join(config.root, "functions", "[[path]].js"),
+          output: join(config.root, "dist", "public", `${route}.html`),
+          url: `http://localhost:8787/${route}`
+        });
+      }
     }
   };
 }
@@ -175,3 +200,22 @@ const getHeadersFile = () =>
 /assets/*
   Cache-Control: public, immutable, max-age=31536000
 `.trim();
+
+const exec = promisify(execFile);
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const pathToRunner = resolve(__dirname, "writeWorkerToDisk.js");
+
+async function run({ entry, output, url }) {
+  const { stdout, stderr } = await exec(
+    "node",
+    [pathToRunner, entry, output, url, "--trace-warnings"],
+    {
+      env: {
+        NODE_NO_WARNINGS: "1",
+        ...process.env
+      }
+    }
+  );
+  if (stdout.length) console.log(stdout);
+  if (stderr.length) console.log(stderr);
+}
